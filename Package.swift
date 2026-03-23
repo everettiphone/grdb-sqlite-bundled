@@ -28,7 +28,7 @@ if ProcessInfo.processInfo.environment["SPI_BUILDER"] == "1" {
 }
 
 let package = Package(
-    name: "GRDB",
+    name: "grdb-sqlite-bundled",
     defaultLocalization: "en", // for tests
     platforms: [
         .iOS(.v13),
@@ -43,9 +43,26 @@ let package = Package(
     ],
     dependencies: dependencies,
     targets: [
-        .systemLibrary(
+        // Bundled SQLite amalgamation — eliminates host system SQLite dependency.
+        // Compiled from source with the features GRDB needs.
+        .target(
             name: "GRDBSQLite",
-            providers: [.apt(["libsqlite3-dev"])]),
+            dependencies: [],
+            cSettings: [
+                .define("NDEBUG"),
+                .define("SQLITE_THREADSAFE", to: "1"),
+                .define("SQLITE_ENABLE_FTS5"),
+                .define("SQLITE_ENABLE_SNAPSHOT"),
+                .define("SQLITE_ENABLE_COLUMN_METADATA"),
+                .define("SQLITE_ENABLE_DBSTAT_VTAB"),
+                .define("SQLITE_ENABLE_FTS3"),
+                .define("SQLITE_ENABLE_FTS3_PARENTHESIS"),
+                .define("SQLITE_ENABLE_FTS3_TOKENIZER"),
+                .define("SQLITE_ENABLE_RTREE"),
+                .define("SQLITE_ENABLE_UNLOCK_NOTIFY"),
+                .define("SQLITE_MAX_VARIABLE_NUMBER", to: "250000"),
+                .define("HAVE_USLEEP", to: "1"),
+            ]),
         .target(
             name: "GRDB",
             dependencies: ["GRDBSQLite"],
